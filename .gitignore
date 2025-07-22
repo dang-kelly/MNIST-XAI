@@ -1,0 +1,32 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+xai/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints
+
+# VSCode settings
+.vscode/
+
+# Environment variables
+.env
+
+# PyTorch and dataset caches
+~/.torch/
+~/.cache/
+*.pth
+*.pt
+
+# Logs and outputs
+*.log
+*.out
+*.h5
+*.onnx
+
+# OS-specific
+.DS_Store
+Thumbs.db
