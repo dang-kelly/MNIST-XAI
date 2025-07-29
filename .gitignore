@@ -6,6 +6,12 @@ __pycache__/
 # Virtual environments
 xai/
 
+#data
+# MNIST / Torchvision datasets
+data/
+# ~/.torch/
+# ~/.cache/
+
 # Jupyter notebooks checkpoints
 .ipynb_checkpoints
 
