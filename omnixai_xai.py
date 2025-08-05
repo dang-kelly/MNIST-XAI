@@ -1,0 +1,1 @@
+# Nice omnixai only works with python 3.10 or 3.11 :)
