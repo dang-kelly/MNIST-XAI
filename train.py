@@ -6,41 +6,43 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+from models import models_to_train_dict
+from pathlib import Path
 
 # 1. Define the FFNN model
-class FFNN(nn.Module):
-    def __init__(self):
-        super(FFNN, self).__init__()
-        self.net = nn.Sequential(
-            # flatten because we take in a [1,28,28] vector -> [784] so no mismatch
-            nn.Flatten(),               
-            nn.Linear(784, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 10)           
-        )
+# class FFNN(nn.Module):
+#     def __init__(self):
+#         super(FFNN, self).__init__()
+#         self.net = nn.Sequential(
+#             # flatten because we take in a [1,28,28] vector -> [784] so no mismatch
+#             nn.Flatten(),               
+#             nn.Linear(784, 128),
+#             nn.ReLU(),
+#             nn.Linear(128, 64),
+#             nn.ReLU(),
+#             nn.Linear(64, 10)           
+#         )
 
-    def forward(self, x):
-        return self.net(x)
+#     def forward(self, x):
+#         return self.net(x)
 
-class CNN(nn.Module):
-    def __init__(self):
-        super(CNN, self).__init__()
-        self.net = nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=20, kernel_size=3),  # 28x28 → 26x26
-            nn.ReLU(),
-            nn.Conv2d(in_channels=20, out_channels=64, kernel_size=5),  # 26x26 → 22x22
-            nn.ReLU(),
-            nn.MaxPool2d(2),                    # 22x22 → 11x11
-            nn.Flatten(),                       # 64 * 11 * 11 = 7744
-            nn.Linear(64 * 11 * 11, 128),
-            nn.ReLU(),
-            nn.Linear(128, 10)                  # final class scores
-        )
+# class CNN(nn.Module):
+#     def __init__(self):
+#         super(CNN, self).__init__()
+#         self.net = nn.Sequential(
+#             nn.Conv2d(in_channels=1, out_channels=20, kernel_size=3),  # 28x28 → 26x26
+#             nn.ReLU(),
+#             nn.Conv2d(in_channels=20, out_channels=64, kernel_size=5),  # 26x26 → 22x22
+#             nn.ReLU(),
+#             nn.MaxPool2d(2),                    # 22x22 → 11x11
+#             nn.Flatten(),                       # 64 * 11 * 11 = 7744
+#             nn.Linear(64 * 11 * 11, 128),
+#             nn.ReLU(),
+#             nn.Linear(128, 10)                  # final class scores
+#         )
 
-    def forward(self, x):
-        return self.net(x)
+#     def forward(self, x):
+#         return self.net(x)
 # 2. Load MNIST dataset
 def load_MNIST(batch_size=64):
     transform = transforms.ToTensor()
@@ -79,11 +81,13 @@ def test(model, loader, device):
             total += y.size(0)
     return correct / total
 
-def load_model(model_path="ffnn_mnist.pth", device=None):
+def load_model(model_path="FFNN_MNIST.pth", device=None):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # TODO: THIS WONT LOAD THE RIGHT MODEL DEPENDING ON MODEL PATH, FIX!!! 
-    model = FFNN().to(device)
+    # TODO: THIS WONT LOAD THE RIGHT MODEL DEPENDING ON MODEL PATH, FIX!!!
+    model_name = Path(model_path).stem
+    model = models_to_train_dict[model_name].to(device)
+
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     return model
@@ -110,7 +114,7 @@ def classify_and_show(model, image_tensor, device=None):
     print(f"Predicted Label: {predicted_label}")
     return predicted_label
 
-def load_and_classify(index = 0, model_name = "ffnn_mnist.pth"):
+def load_and_classify(index = 0, model_name = "FFNN_MNIST.pth"):
     transform = transforms.ToTensor()
     test_set = datasets.MNIST(root="./data", train=False, transform=transform)
     image, label = test_set[index]  
@@ -120,10 +124,11 @@ def load_and_classify(index = 0, model_name = "ffnn_mnist.pth"):
     classify_and_show(model, image)
     return model, image, label
 
-def train_and_save(save_file_name = "ffnn_mnist.pth"):
+def train_and_save(model_path = "FFNN_MNIST.pth"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"device type: {device}")
-    model = FFNN().to(device)
+    model_name = Path(model_path).stem
+    model = models_to_train_dict[model_name].to(device)
     train_loader, test_loader = load_MNIST()
     # Adam is chosen over vanilla SGD due to its adaptive learning rate and momentum
     optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -134,11 +139,11 @@ def train_and_save(save_file_name = "ffnn_mnist.pth"):
         acc = test(model, test_loader, device)
         print(f"Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Test Accuracy = {acc:.4f}")
 
-    torch.save(model.state_dict(), save_file_name)
-    print(f"Model saved to {save_file_name}")
+    torch.save(model.state_dict(), model_path)
+    print(f"Model saved to {model_path}")
 
 def main():
-    train_and_save(save_file_name="CNN_MNIST.pth")
+    train_and_save(model_path="CNN_MNIST.pth")
     load_and_classify(model_name="CNN_MNIST.pth")
 
 if __name__ == "__main__":
